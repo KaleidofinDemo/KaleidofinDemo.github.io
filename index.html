@@ -264,7 +264,6 @@
                                 <h3 class="font-semibold text-center mb-2">KI Score Grade</h3>
                                 <div class="text-center mt-4">
                                     <p class="text-5xl font-bold text-teal-600"><button id="analysisKiScore" class="ki-score-link" data-score-type="originator" data-name=""></button></p>
-                                    <p class="text-lg font-semibold text-gray-500">Rating: A+</p>
                                 </div>
                             </div>
 
@@ -436,7 +435,7 @@
                                     <h4 class="font-semibold text-center">Simulation Results</h4>
                                     <p id="simulationOriginatorName" class="text-center text-sm text-gray-600 -mt-2"></p>
                                     <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-center">
-                                        <div class="bg-gray-50 p-3 rounded-md"><p class="text-sm text-gray-500">Transaction Grading</p><p id="poolRating" class="text-xl font-bold text-teal-600"><button class="ki-score-link" data-score-type="pool" data-name="Simulated Pool">AA-</button></p></div>
+                                        <div class="bg-gray-50 p-3 rounded-md"><p class="text-sm text-gray-500">Transaction Grade</p><p id="poolGrade" class="text-xl font-bold text-teal-600"><button class="ki-score-link" data-score-type="pool" data-name="Simulated Pool">AA-</button></p></div>
                                         <div class="bg-gray-50 p-3 rounded-md"><p class="text-sm text-gray-500">Selected Loans</p><p id="selectedLoans" class="text-xl font-bold text-teal-600">9,540</p></div>
                                         <div class="bg-gray-50 p-3 rounded-md"><p class="text-sm text-gray-500">Pool Value (KES)</p><p id="poolValue" class="text-xl font-bold text-teal-600">980M</p></div>
                                         <div class="bg-gray-50 p-3 rounded-md"><p class="text-sm text-gray-500">W.A. Tenure</p><p id="poolTenure" class="text-xl font-bold text-teal-600">18 mo</p></div>
@@ -446,6 +445,48 @@
                                     <div class="border-t pt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div class="chart-container h-56"><canvas id="geoConcentrationChart"></canvas></div>
                                         <div class="chart-container h-56"><canvas id="kiScoreDistChart"></canvas></div>
+                                        
+                                        <!-- Estimated Loss Rate Comparison Table -->
+                                        <div class="md:col-span-2 border-t pt-4 mt-4">
+                                            <h4 class="font-semibold text-center text-gray-700 mb-4">Estimated Loss Rate by Filter</h4>
+                                            <div class="overflow-x-auto">
+                                                <table class="w-full text-sm text-left text-gray-500">
+                                                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                                        <tr>
+                                                            <th scope="col" class="px-4 py-2">Filter</th>
+                                                            <th scope="col" class="px-4 py-2">Selected Bucket</th>
+                                                            <th scope="col" class="px-4 py-2 text-right">Bucket Loss Rate</th>
+                                                            <th scope="col" class="px-4 py-2 text-right">Overall Portfolio Rate</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr class="bg-white border-b">
+                                                            <td class="px-4 py-2 font-medium text-gray-900">Loan Tenure</td>
+                                                            <td id="lossCompTenureBucket" class="px-4 py-2"></td>
+                                                            <td id="lossCompTenureBucketRate" class="px-4 py-2 text-right font-semibold text-green-600"></td>
+                                                            <td id="lossCompTenureOverallRate" class="px-4 py-2 text-right"></td>
+                                                        </tr>
+                                                        <tr class="bg-white border-b">
+                                                            <td class="px-4 py-2 font-medium text-gray-900">Loan Amount</td>
+                                                            <td id="lossCompAmountBucket" class="px-4 py-2"></td>
+                                                            <td id="lossCompAmountBucketRate" class="px-4 py-2 text-right font-semibold text-green-600"></td>
+                                                            <td id="lossCompAmountOverallRate" class="px-4 py-2 text-right"></td>
+                                                        </tr>
+                                                        <tr class="bg-white border-b">
+                                                            <td class="px-4 py-2 font-medium text-gray-900">Interest Rate</td>
+                                                            <td id="lossCompInterestBucket" class="px-4 py-2"></td>
+                                                            <td id="lossCompInterestBucketRate" class="px-4 py-2 text-right font-semibold text-green-600"></td>
+                                                            <td id="lossCompInterestOverallRate" class="px-4 py-2 text-right"></td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div class="text-center mt-4 bg-gray-100 p-3 rounded-md">
+                                                <p class="text-sm font-medium text-gray-600">Overall Estimated Loss for Selected Pool</p>
+                                                <p id="overallEstimatedLoss" class="text-xl font-bold text-red-600"></p>
+                                            </div>
+                                        </div>
+
                                         <div class="md:col-span-2 chart-container h-64"><canvas id="waterfallChart"></canvas></div>
                                     </div>
                                     <div class="border-t pt-6 text-center space-x-3">
@@ -1053,16 +1094,16 @@
                 ];
 
                 state.transactions = [
-                    { id: 'MC-AGRI-003', name: 'MC-AGRI-003', originator: 'Momentum Credit', structure: 'Securitisation', rating: 'A+', tenure: '24 Months', yield: '19.5%', covenantsSet: false },
-                    { id: 'ASA-SME-005', name: 'ASA-SME-005', originator: 'Asa Kenya', structure: 'Securitisation', rating: 'AA', tenure: '36 Months', yield: '18.0%', covenantsSet: true },
-                    { id: 'RMFB-BODA-001', name: 'RMFB-BODA-001', originator: 'Rafiki MFB', structure: 'Term Loan', rating: 'AA-', tenure: '18 Months', yield: '21.0%', covenantsSet: true },
-                    { id: 'MC-VEHICLE-001', name: 'MC-VEHICLE-001', originator: 'Momentum Credit', structure: 'Term Loan', rating: 'A', tenure: '24 Months', yield: '22.5%', covenantsSet: true },
-                    { id: 'PLAT-SAL-012', name: 'PLAT-SAL-012', originator: 'Platinum Credit', structure: 'Securitisation', rating: 'A+', tenure: '30 Months', yield: '20.0%', covenantsSet: true },
-                    { id: 'FAULU-BIZ-008', name: 'FAULU-BIZ-008', originator: 'Faulu MFB', structure: 'Term Loan', rating: 'A', tenure: '24 Months', yield: '19.8%', covenantsSet: false },
-                    { id: 'JUHUDI-AGRI-021', name: 'JUHUDI-AGRI-021', originator: 'Juhudi Kilimo', structure: 'Securitisation', rating: 'AA-', tenure: '36 Months', yield: '18.5%', covenantsSet: true },
-                    { id: 'MOGO-LOGBOOK-050', name: 'MOGO-LOGBOOK-050', originator: 'Mogo Kenya', structure: 'Term Loan', rating: 'BBB+', tenure: '18 Months', yield: '24.0%', covenantsSet: true },
-                    { id: 'IZWE-PERS-015', name: 'IZWE-PERS-015', originator: 'Izwe Kenya', structure: 'Term Loan', rating: 'BBB', tenure: '20 Months', yield: '23.0%', covenantsSet: false },
-                    { id: 'SMEP-EDU-004', name: 'SMEP-EDU-004', originator: 'SMEP MFB', structure: 'Securitisation', rating: 'A-', tenure: '12 Months', yield: '19.0%', covenantsSet: true },
+                    { id: 'MC-AGRI-003', name: 'MC-AGRI-003', originator: 'Momentum Credit', structure: 'Securitisation', grade: 'A+', tenure: '24 Months', yield: '19.5%', covenantsSet: false },
+                    { id: 'ASA-SME-005', name: 'ASA-SME-005', originator: 'Asa Kenya', structure: 'Securitisation', grade: 'AA', tenure: '36 Months', yield: '18.0%', covenantsSet: true },
+                    { id: 'RMFB-BODA-001', name: 'RMFB-BODA-001', originator: 'Rafiki MFB', structure: 'Term Loan', grade: 'AA-', tenure: '18 Months', yield: '21.0%', covenantsSet: true },
+                    { id: 'MC-VEHICLE-001', name: 'MC-VEHICLE-001', originator: 'Momentum Credit', structure: 'Term Loan', grade: 'A', tenure: '24 Months', yield: '22.5%', covenantsSet: true },
+                    { id: 'PLAT-SAL-012', name: 'PLAT-SAL-012', originator: 'Platinum Credit', structure: 'Securitisation', grade: 'A+', tenure: '30 Months', yield: '20.0%', covenantsSet: true },
+                    { id: 'FAULU-BIZ-008', name: 'FAULU-BIZ-008', originator: 'Faulu MFB', structure: 'Term Loan', grade: 'A', tenure: '24 Months', yield: '19.8%', covenantsSet: false },
+                    { id: 'JUHUDI-AGRI-021', name: 'JUHUDI-AGRI-021', originator: 'Juhudi Kilimo', structure: 'Securitisation', grade: 'AA-', tenure: '36 Months', yield: '18.5%', covenantsSet: true },
+                    { id: 'MOGO-LOGBOOK-050', name: 'MOGO-LOGBOOK-050', originator: 'Mogo Kenya', structure: 'Term Loan', grade: 'BBB+', tenure: '18 Months', yield: '24.0%', covenantsSet: true },
+                    { id: 'IZWE-PERS-015', name: 'IZWE-PERS-015', originator: 'Izwe Kenya', structure: 'Term Loan', grade: 'BBB', tenure: '20 Months', yield: '23.0%', covenantsSet: false },
+                    { id: 'SMEP-EDU-004', name: 'SMEP-EDU-004', originator: 'SMEP MFB', structure: 'Securitisation', grade: 'A-', tenure: '12 Months', yield: '19.0%', covenantsSet: true },
                 ];
                 
                 state.availablePortfolios = [
@@ -1177,7 +1218,7 @@
                             <td class="px-6 py-4 font-medium text-gray-900"><button class="pool-details-link text-teal-600 hover:underline" data-pool-name="${tx.name}">${tx.name}</button></td>
                             <td class="px-6 py-4">${tx.originator}</td>
                             <td class="px-6 py-4">${tx.structure}</td>
-                            <td class="px-6 py-4 font-semibold text-green-500"><button class="ki-score-link" data-score-type="pool" data-name="${tx.name}">${tx.rating}</button></td>
+                            <td class="px-6 py-4 font-semibold text-green-500"><button class="ki-score-link" data-score-type="pool" data-name="${tx.name}">${tx.grade}</button></td>
                             <td class="px-6 py-4">${tx.tenure}</td>
                             <td class="px-6 py-4">${tx.yield}</td>
                             <td class="px-6 py-4 text-center">${actionButton}</td>
@@ -1567,7 +1608,7 @@
             });
 
             function calculateWaterfall(poolValue, lossRate) {
-                const totalPrincipal = poolValue * 0.85; 
+                const totalPrincipal = poolValue * 0.85;
                 const totalInterest = poolValue * 0.15;
                 const totalCashflow = totalPrincipal + totalInterest;
 
@@ -1587,7 +1628,18 @@
 
                 const equityPayout = Math.max(0, cashAfterMezz);
 
-                return { senior: seniorPayout, mezz: mezzPayout, equity: equityPayout };
+                // Split payouts into principal and interest for charting
+                // Assume an 85/15 split for payouts, which is a simplification but visually works
+                const split = (payout) => ({
+                    principal: payout * 0.85,
+                    interest: payout * 0.15
+                });
+                
+                return {
+                    senior: split(seniorPayout),
+                    mezz: split(mezzPayout),
+                    equity: split(equityPayout)
+                };
             }
 
             function applyFilters() {
@@ -1628,6 +1680,28 @@
             function runSensitivitySimulation(showModal = true) {
                 const lossRate = parseFloat(sensitivityLossSlider.value);
                 document.getElementById('estimatedLoss').textContent = `${lossRate.toFixed(1)}%`;
+                
+                // Update new loss rate comparison table
+                const tenureMin = tenureMinSlider.value;
+                const tenureMax = tenureMaxSlider.value;
+                document.getElementById('lossCompTenureBucket').textContent = `${tenureMin} to ${tenureMax} months`;
+                document.getElementById('lossCompTenureBucketRate').textContent = `${(lossRate - 0.2).toFixed(2)}%`;
+                document.getElementById('lossCompTenureOverallRate').textContent = `${(lossRate + 1.0).toFixed(2)}%`;
+
+                const amountMin = loanAmountMinSlider.value / 1000;
+                const amountMax = loanAmountMaxSlider.value / 1000;
+                document.getElementById('lossCompAmountBucket').textContent = `KES ${amountMin}k to ${amountMax}k`;
+                document.getElementById('lossCompAmountBucketRate').textContent = `${(lossRate - 0.1).toFixed(2)}%`;
+                document.getElementById('lossCompAmountOverallRate').textContent = `${(lossRate + 1.5).toFixed(2)}%`;
+
+                const interestMin = interestRateMinSlider.value;
+                const interestMax = interestRateMaxSlider.value;
+                document.getElementById('lossCompInterestBucket').textContent = `${interestMin}% to ${interestMax}%`;
+                document.getElementById('lossCompInterestBucketRate').textContent = `${(lossRate + 0.2).toFixed(2)}%`;
+                document.getElementById('lossCompInterestOverallRate').textContent = `${(lossRate + 1.2).toFixed(2)}%`;
+
+                document.getElementById('overallEstimatedLoss').textContent = `${lossRate.toFixed(1)}%`;
+
 
                 const stressedCase = calculateWaterfall(980, lossRate);
 
@@ -1636,15 +1710,48 @@
                     data: {
                         labels: ['Senior', 'Mezzanine', 'Equity (Residual)'],
                         datasets: [{
-                            label: 'Cashflow Application (KES Millions)',
-                            data: [stressedCase.senior.toFixed(0), stressedCase.mezz.toFixed(0), stressedCase.equity.toFixed(0)],
-                            backgroundColor: ['#0d9488', '#f97316', '#8b5cf6']
+                            label: 'Principal',
+                            data: [
+                                stressedCase.senior.principal.toFixed(0),
+                                stressedCase.mezz.principal.toFixed(0),
+                                stressedCase.equity.principal.toFixed(0)
+                            ],
+                            backgroundColor: '#0d9488' // Teal
+                        }, {
+                            label: 'Interest',
+                            data: [
+                                stressedCase.senior.interest.toFixed(0),
+                                stressedCase.mezz.interest.toFixed(0),
+                                stressedCase.equity.interest.toFixed(0)
+                            ],
+                            backgroundColor: '#5eead4' // Lighter Teal
                         }]
                     },
                     options: {
-                        responsive: true, maintainAspectRatio: false,
-                        plugins: { legend: { display: false }, title: { display: true, text: 'Cashflow Payout Waterfall (KES Millions)' } },
-                        scales: { y: { beginAtZero: true, title: { display: true, text: 'KES Millions' } } }
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Cashflow Payout Waterfall (KES Millions)'
+                            }
+                        },
+                        scales: {
+                            x: {
+                                stacked: true
+                            },
+                            y: {
+                                stacked: true,
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'KES Millions'
+                                }
+                            }
+                        }
                     }
                 });
 
@@ -1652,17 +1759,26 @@
                     document.getElementById('baseLossRate').textContent = `${state.simulationBaseCase.lossRate.toFixed(1)}%`;
                     document.getElementById('stressedLossRate').textContent = `${lossRate.toFixed(1)}%`;
                     
-                    document.getElementById('baseSenior').textContent = state.simulationBaseCase.senior.toFixed(1);
-                    document.getElementById('stressedSenior').textContent = state.simulationBaseCase.senior.toFixed(1);
-                    document.getElementById('impactSenior').textContent = '0.0';
+                    const baseSeniorTotal = state.simulationBaseCase.senior.principal + state.simulationBaseCase.senior.interest;
+                    const stressedSeniorTotal = stressedCase.senior.principal + stressedCase.senior.interest;
 
-                    document.getElementById('baseMezz').textContent = state.simulationBaseCase.mezz.toFixed(1);
-                    document.getElementById('stressedMezz').textContent = state.simulationBaseCase.mezz.toFixed(1);
-                    document.getElementById('impactMezz').textContent = '0.0';
+                    const baseMezzTotal = state.simulationBaseCase.mezz.principal + state.simulationBaseCase.mezz.interest;
+                    const stressedMezzTotal = stressedCase.mezz.principal + stressedCase.mezz.interest;
 
-                    const equityImpact = stressedCase.equity - state.simulationBaseCase.equity;
-                    document.getElementById('baseEquity').textContent = state.simulationBaseCase.equity.toFixed(1);
-                    document.getElementById('stressedEquity').textContent = stressedCase.equity.toFixed(1);
+                    const baseEquityTotal = state.simulationBaseCase.equity.principal + state.simulationBaseCase.equity.interest;
+                    const stressedEquityTotal = stressedCase.equity.principal + stressedCase.equity.interest;
+
+                    document.getElementById('baseSenior').textContent = baseSeniorTotal.toFixed(1);
+                    document.getElementById('stressedSenior').textContent = stressedSeniorTotal.toFixed(1);
+                    document.getElementById('impactSenior').textContent = (stressedSeniorTotal - baseSeniorTotal).toFixed(1);
+
+                    document.getElementById('baseMezz').textContent = baseMezzTotal.toFixed(1);
+                    document.getElementById('stressedMezz').textContent = stressedMezzTotal.toFixed(1);
+                    document.getElementById('impactMezz').textContent = (stressedMezzTotal - baseMezzTotal).toFixed(1);
+
+                    const equityImpact = stressedEquityTotal - baseEquityTotal;
+                    document.getElementById('baseEquity').textContent = baseEquityTotal.toFixed(1);
+                    document.getElementById('stressedEquity').textContent = stressedEquityTotal.toFixed(1);
                     document.getElementById('impactEquity').textContent = equityImpact.toFixed(1);
 
                     sensitivityModal.classList.add('active');
@@ -1685,7 +1801,7 @@
                         name: name,
                         originator: 'Rafiki MFB',
                         structure: 'Securitisation',
-                        rating: document.getElementById('poolRating').textContent,
+                        grade: document.getElementById('poolGrade').textContent,
                         tenure: document.getElementById('poolTenure').textContent,
                         yield: 'N/A',
                         covenantsSet: false
